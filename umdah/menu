@@ -1,0 +1,327 @@
+#!/bin/bash
+# ==========================================
+# Color
+GREEN='\e[32m'
+RED='\033[0;31m'
+BGBLUE='\e[1;44m'
+ORANGE='\033[0;33m'
+BLUE='\033[1;36m'
+PURPLE='\033[0;35m'
+BLUE='\033[0;36m'
+BG='\E[44;1;39m'
+NC='\033[0;37m'
+WHITE='\033[0;37m'
+r="\033[1;31m"  #REDTERANG
+# ==========================================
+ISP=$(cat /etc/xray/isp)
+CITY=$(cat /etc/xray/city)
+IPVPS=$(curl -s ipv4.icanhazip.com)
+domain=$(cat /etc/xray/domain)
+RAM=$(free -m | awk 'NR==2 {print $2}')
+USAGERAM=$(free -m | awk 'NR==2 {print $3}')
+MEMOFREE=$(printf '%-1s' "$(free -m | awk 'NR==2{printf "%.2f%%", $3*100/$2 }')")
+LOADCPU=$(printf '%-0.00001s' "$(top -bn1 | awk '/Cpu/ { cpu = "" 100 - $8 "%" }; END { print cpu }')")
+MODEL=$(cat /etc/os-release | grep -w PRETTY_NAME | head -n1 | sed 's/=//g' | sed 's/"//g' | sed 's/PRETTY_NAME//g')
+CORE=$(printf '%-1s' "$(grep -c cpu[0-9] /proc/stat)")
+DATEVPS=$(date +'%d/%m/%Y')
+TIMEZONE=$(printf '%(%H:%M:%S)T')
+SERONLINE=$(uptime -p | cut -d " " -f 2-10000)
+clear
+MYIP=$(curl -sS ipv4.icanhazip.com)
+echo ""
+#########################
+# USERNAME
+rm -f /usr/bin/user
+username=$(curl -sS https://raw.githubusercontent.com/alawivpn/izin/script/ip | grep $MYIP | awk '{print $2}')
+echo "$username" >/usr/bin/user
+# validity
+rm -f /usr/bin/e
+today=`date -d "0 days" +"%Y-%m-%d"`
+valid=$(curl -sS https://raw.githubusercontent.com/alawivpn/izin/script/ip | grep $MYIP | awk '{print $3}')
+echo "$valid" >/usr/bin/e
+# DETAIL ORDER
+username=$(cat /usr/bin/user)
+oid=$(cat /usr/bin/ver)
+exp=$(cat /usr/bin/e)
+clear
+# CERTIFICATE STATUS
+d1=$(date -d "$valid" +%s)
+d2=$(date -d "$today" +%s)
+certifacate=$(((d1 - d2) / 86400))
+# VPS Information
+DATE=$(date +'%Y-%m-%d')
+datediff() {
+    d1=$(date -d "$1" +%s)
+    d2=$(date -d "$2" +%s)
+    echo -e "$COLOR1 $NC Expiry In   : $(( (d1 - d2) / 86400 )) Days"
+}
+mai="datediff "$Exp" "$DATE""
+
+# Status ExpiRED Active | Geo Project
+Info="${GREEN}Active${NC}"
+Error="${RED}Expired${NC}"
+if [[ "$certifacate" -le "0" ]]; then
+sts="${Error}"
+echo -e " ${RED}Masa Aktif Script Kamu Sudah Habis${NC}"
+echo -e " ${RED}Silahkan Contact Admin Untuk Perpanjang ${NC}"
+echo -e " ${GREEN}Whatsapp = 6283151636921 ${NC}"
+echo -e " ${GREEN}Telegram = Peyyx ${NC}"
+sleep 3
+exit 1
+else
+sts="${Info}"
+fi
+echo -e "\e[32mloading...\e[0m"
+clear
+
+# OS Uptime
+uptime="$(uptime -p | cut -d " " -f 2-10)"
+cpu_usage1="$(ps aux | awk 'BEGIN {sum=0} {sum+=$3}; END {print sum}')"
+cpu_usage="$((${cpu_usage1/\.*} / ${coREDiilik:-1}))"
+cpu_usage+=" %"
+WKT=$(curl -s ipinfo.io/timezone )
+DAY=$(date +%A)
+DATE=$(date +%m/%d/%Y)
+DATE2=$(date -R | cut -d " " -f -5)
+IPVPS=$(curl -s ipinfo.io/ip )
+cname=$( awk -F: '/model name/ {name=$2} END {print name}' /proc/cpuinfo )
+cores=$( awk -F: '/model name/ {core++} END {print core}' /proc/cpuinfo )
+freq=$( awk -F: ' /cpu MHz/ {freq=$2} END {print freq}' /proc/cpuinfo )
+tram=$( free -m | awk 'NR==2 {print $2}' )
+uram=$( free -m | awk 'NR==2 {print $3}' )
+fram=$( free -m | awk 'NR==2 {print $4}' )
+clear
+ssh_service=$(/etc/init.d/ssh status | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+dropbear_service=$(/etc/init.d/dropbear status | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+haproxy_service=$(systemctl status haproxy | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+xray_service=$(systemctl status xray | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+nginx_service=$(systemctl status nginx | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
+#Status | Geo Project
+clear
+# STATUS SERVICE  SSH 
+if [[ $ssh_service == "running" ]]; then 
+   status_ssh="${GREEN}ON${NC}"
+else
+   status_ssh="${RED}OFF${NC} "
+fi
+
+# // SSH Websocket Proxy
+ssh_ws=$( systemctl status ws | grep Active | awk '{print $3}' | sed 's/(//g' | sed 's/)//g' )
+if [[ $ssh_ws == "running" ]]; then
+    status_ws_epro="${GREEN}ON${NC}"
+else
+    status_ws_epro="${RED}OFF${NC} "
+fi
+
+# STATUS SERVICE HAPROXY
+if [[ $haproxy_service == "running" ]]; then 
+   status_haproxy="${GREEN}ON  ${NC}"
+else
+   status_haproxy="${RED}OFF${NC} "
+fi
+
+# STATUS SERVICE XRAY
+if [[ $xray_service == "running" ]]; then 
+   status_xray="${GREEN} ON${NC}"
+else
+   status_xray="${RED}OFF${NC} "
+fi
+
+# STATUS SERVICE NGINX
+if [[ $nginx_service == "running" ]]; then 
+   status_nginx="${GREEN}ON  ${NC}"
+else
+   status_nginx="${RED}OFF${NC} "
+fi
+
+# STATUS SERVICE Dropbear
+if [[ $dropbear_service == "running" ]]; then 
+   status_dropbear="${GREEN}ON ${NC}"
+else
+   status_dropbear="${RED}OFF${NC} "
+fi
+#####INFOAKUN
+vlx=$(grep -c -E "^#& " "/etc/xray/config.json")
+let vla=$vlx/2
+vmc=$(grep -c -E "^### " "/etc/xray/config.json")
+let vma=$vmc/2
+ssh1="$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd | wc -l)"
+trx=$(grep -c -E "^#! " "/etc/xray/config.json")
+let trb=$trx/2
+ssx=$(grep -c -E "^#ss# " "/etc/xray/config.json")
+let ssa=$ssx/2
+r="\033[1;31m"  #REDTERANG
+echo -e " "
+echo -e "$BLUE ╭──────────────────────────────────────────────────────────╮$NC"
+echo -e " $BLUE│$NC $BG              • ALAWI-VPN TUNNELING V.2.0 •             $NC $BLUE│$NC"
+echo -e "$BLUE ╰──────────────────────────────────────────────────────────╯$NC"
+echo -e "$BLUE ╭──────────────────────────────────────────────────────────╮$NC"
+echo -e " $BLUE│$NC$r ❒ $NC$WHITE System OS ${NC}     $WHITE:$NC $MODEL${NC}"
+echo -e " $BLUE│$NC$r ❒ $NC$WHITE Core System ${NC}   $WHITE:$NC $CORE${NC}"
+echo -e " $BLUE│$NC$r ❒ $NC$WHITE Server RAM ${NC}    $WHITE:$NC $uram/$RAM MB $NC"
+echo -e " $BLUE│$NC$r ❒ $NC$WHITE Uptime Server ${NC} $WHITE:$NC $SERONLINE${NC}"
+echo -e " $BLUE│$NC$r ❒ $NC$WHITE Domain ${NC}        $WHITE:$NC$BLUE $domain${NC}"
+echo -e " $BLUE│$NC$r ❒ $NC$WHITE IP VPS ${NC}        $WHITE:$NC$BLUE $IPVPS${NC}"
+echo -e " $BLUE│$NC$r ❒ $NC$WHITE ISP ${NC}           $WHITE:$NC$BLUE $ISP${NC}"
+echo -e " $BLUE│$NC$r ❒ $NC$WHITE City ${NC}          $WHITE:$NC $CITY${NC}"
+echo -e "$BLUE ╰──────────────────────────────────────────────────────────╯$NC"
+echo -e "$BLUE •──────────────────────────────────────────────────────────•$NC"
+echo -e " $NC$ORANGE    SSH/OVPN     SOCKS     VMESS      VLESS     TROJAN"
+echo -e " $NC        $GREEN${ssh1}$NC          $GREEN${ssa}$NC         $GREEN${vma}$NC         $GREEN${vla}$NC          $GREEN${trb}$NC"
+echo -e "$BLUE •──────────────────────────────────────────────────────────•$NC"
+echo -e " $BLUE╭────────────────╮╭──────────────────╮╭────────────────────╮${NC}"
+echo -e " $BLUE│ ${NC} $WHITE SSH$NC : $status_ssh" "         $WHITE NGINX$NC : $status_nginx" "        $WHITE  XRAY$NC : $status_xray      $NC$BLUE│$NC" 
+echo -e " $BLUE│ ${NC} $WHITE WS-ePRO$NC : $status_ws_epro" "     $WHITE DROPBEAR$NC : $status_dropbear" "     $WHITE  HAPROXY$NC : $status_haproxy   $NC$BLUE│$NC" 
+echo -e " $BLUE╰────────────────╯╰──────────────────╯╰────────────────────╯${NC}"
+echo -e " $BLUE╭──────────────────────────────────────────────────────────╮${NC}"
+echo -e " $BLUE│$NC [${r}01${NC}]$WHITE SSH MENU$NC     $ORANGE•$NC [${r}10${NC}]$WHITE DELL ALL EXP$NC $ORANGE•$NC [${r}19${NC}]$WHITE RESTORE     $NC$BLUE│$NC"
+echo -e " $BLUE│$NC [${r}02${NC}]$WHITE VMESS MENU$NC   $ORANGE•$NC [${r}11${NC}]$WHITE AUTOREBOOT$NC  $ORANGE •$NC [${r}20${NC}]$WHITE REBOOT      $NC$BLUE│$NC"    
+echo -e " $BLUE│$NC [${r}03${NC}]$WHITE VLESS MENU$NC   $ORANGE•$NC [${r}12${NC}]$WHITE INFO PORT$NC   $ORANGE •$NC [${r}21${NC}]$WHITE RESTART     $NC$BLUE│$NC"   
+echo -e " $BLUE│$NC [${r}04${NC}]$WHITE TROJAN MENU$NC  $ORANGE•$NC [${r}13${NC}]$WHITE SPEEDTEST$NC   $ORANGE •$NC [${r}22${NC}]$WHITE DOMAIN      $NC$BLUE│$NC" 
+echo -e " $BLUE│$NC [${r}05${NC}]$WHITE SHADOW MENU$NC  $ORANGE•$NC [${r}14${NC}]$WHITE RUNNING$NC     $ORANGE •$NC [${r}23${NC}]$WHITE CERT SSL    $NC$BLUE│$NC"
+echo -e " $BLUE│$NC [${r}06${NC}]$WHITE LIMIT SPEED$NC  $ORANGE•$NC [${r}15${NC}]$WHITE CLEAR LOG$NC   $ORANGE •$NC [${r}24${NC}]$WHITE INSTALL UDP $NC$BLUE│$NC"
+echo -e " $BLUE│$NC [${r}07${NC}]$WHITE VPS INFO$NC     $ORANGE•$NC [${r}16${NC}]$WHITE CEK BANDWITH$NC $ORANGE•$NC [${r}25${NC}]$WHITE CLEAR CACHE $NC$BLUE│$NC"
+echo -e " $BLUE│$NC [${r}08${NC}]$WHITE BOT NOTIF$NC    $ORANGE•$NC [${r}17${NC}]$WHITE UPDATE SC    $NC$ORANGE•$NC [${r}26${NC}]$WHITE BOT PANEL   $NC$BLUE│$NC"
+echo -e " $BLUE│$NC [${r}09${NC}]$WHITE BANNER$NC       $ORANGE•$NC [${r}18${NC}] BACKUP       $NC$ORANGE•$NC [${r}00${NC}]$WHITE EXIT MENU$NC   $BLUE│$NC"
+echo -e " $BLUE╰──────────────────────────────────────────────────────────╯${NC}"
+echo -e " $BLUE╭──────────────────────────────────────────────────────────╮${NC}"
+echo -e " $BLUE│$NC$r • $NC$WHITE Version$NC        ${WHITE}:$ORANGE V.2.0 {latest update}$NC"
+echo -e " $BLUE│$NC$r • $NC$WHITE User$NC           ${WHITE}:$ORANGE $username$NC"
+echo -e " $BLUE│$NC$r • $NC$WHITE Script Status$NC  ${WHITE}:$GREEN $sts$NC"
+echo -e " $BLUE│$NC$r • $NC$WHITE Expiry script  :$NC $RED$exp $certifacate Days$NC "
+echo -e " $BLUE╰──────────────────────────────────────────────────────────╯${NC}"
+echo
+read -p " Select menu : " opt
+echo -e ""
+case $opt in
+1 | 01)
+clear
+m-sshws
+;;
+2 | 02)
+clear
+m-vmess
+;;
+3 | 03)
+clear
+m-vless
+;;
+4 | 04)
+clear
+m-trojan
+;;
+5 | 05)
+clear
+m-ssws
+;;
+6 | 06)
+clear
+limitspeed
+;;
+7 | 07)
+clear
+gotop
+echo ""
+echo -e " ${GREEN} Back to menu in 1 sec ${NC}"
+sleep 1
+menu
+;;
+8 | 08)
+clear
+bot
+;;
+9 | 09)
+clear
+nano /etc/kyt.txt
+;;
+10)
+clear
+xp
+echo ""
+echo -e " ${GREEN} Back to menu in 1 sec ${NC}"
+sleep 1
+menu
+;;
+11)
+clear
+autoreboot
+;;
+12)
+clear
+prot
+echo ""
+read -n 1 -s -r -p "Press any key to back on menu"
+menu
+;;
+13)
+clear
+speedtest
+echo ""
+read -n 1 -s -r -p "Press any key to back on menu"
+menu
+;;
+14)
+clear
+run
+;;
+15)
+clear
+clearlog
+;;
+16)
+clear
+bw
+;;
+17)
+clear
+wget https://raw.githubusercontent.com/ALAWI-VPN/VPN/vip/update.sh && chmod +x update.sh && ./update.sh
+;;
+18)
+clear
+menu-backup
+;;
+19)
+clear
+restore
+;;
+20)
+clear
+reboot
+;;
+21)
+clear
+restart
+;;
+22)
+clear
+addhost
+;;
+23)
+clear
+fixcert
+;;
+24)
+clear
+wget https://raw.githubusercontent.com/ALAWI-VPN/VPN/vip/udp-custom.sh && chmod +x udp-custom.sh && ./udp-custom.sh && rm udp-custom.sh
+;;
+25)
+clear
+clearcache
+;;
+26)
+clear
+add-bot-panel
+;;
+0 | 00)
+figlet GEEKZ
+exit
+;;
+x)
+menu
+;;
+*)
+echo -e ""
+menu
+;;
+esac
+exit 0
